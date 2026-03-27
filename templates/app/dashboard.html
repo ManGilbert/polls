@@ -79,10 +79,10 @@
             <div class="dashboard-panel">
                 <div class="panel-head">
                     <h2 class="h6 mb-1">Poll list</h2>
-                    <p class="small text-secondary mb-0">Search and browse 5 polls per page.</p>
+                    <p class="small text-secondary mb-0">Auto-search across poll titles, choices, and voter names.</p>
                 </div>
-                <form method="get" action="{% url 'app:dashboard' %}" class="d-flex gap-2 small mb-3">
-                    <input type="text" name="q" value="{{ search_query }}" class="form-control form-control-sm" placeholder="Search polls">
+                <form method="get" action="{% url 'app:dashboard' %}" class="d-flex gap-2 small mb-3" id="dashboard-search-form">
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control form-control-sm" placeholder="Search all poll records" id="dashboard-search-input" autocomplete="off">
                     {% if selected_question %}
                         <input type="hidden" name="poll" value="{{ selected_question.id }}">
                     {% endif %}
@@ -204,4 +204,16 @@
         </div>
     </div>
 </section>
+<script>
+    (() => {
+        const form = document.getElementById("dashboard-search-form");
+        const input = document.getElementById("dashboard-search-input");
+        if (!form || !input) return;
+        let timerId;
+        input.addEventListener("input", () => {
+            clearTimeout(timerId);
+            timerId = window.setTimeout(() => form.submit(), 350);
+        });
+    })();
+</script>
 {% endblock %}
