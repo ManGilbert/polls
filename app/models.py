@@ -6,6 +6,7 @@ from django.utils import timezone
 class Question(models.Model):
     question_text = models.CharField(max_length=255)
     pub_date = models.DateTimeField("date published")
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-pub_date", "-id"]

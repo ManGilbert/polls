@@ -22,9 +22,9 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         return (
-            Question.objects.filter(pub_date__lte=timezone.now())
+            Question.objects.filter(pub_date__lte=timezone.now(), is_active=True)
             .prefetch_related("choices")
-            .order_by("-pub_date")[:6]
+            .order_by("-pub_date")[:5]
         )
 
     def get_context_data(self, **kwargs):
@@ -38,7 +38,10 @@ class DetailView(generic.DetailView):
     template_name = "app/detail.html"
 
     def get_queryset(self):
-        return Question.objects.filter(pub_date__lte=timezone.now()).prefetch_related("choices")
+        return Question.objects.filter(
+            pub_date__lte=timezone.now(),
+            is_active=True,
+        ).prefetch_related("choices")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,13 +55,16 @@ class ResultsView(generic.DetailView):
     template_name = "app/results.html"
 
     def get_queryset(self):
-        return Question.objects.prefetch_related("choices")
+        return Question.objects.filter(is_active=True).prefetch_related("choices")
 
 
 def vote(request, question_id):
-    question = get_object_or_404(Question.objects.prefetch_related("choices"), pk=question_id)
-    if question.pub_date > timezone.now():
-        messages.error(request, "This poll is not open yet.")
+    question = get_object_or_404(
+        Question.objects.prefetch_related("choices"),
+        pk=question_id,
+    )
+    if question.pub_date > timezone.now() or not question.is_active:
+        messages.error(request, "This poll is not available right now.")
         return redirect("app:index")
     if request.method != "POST":
         return redirect("app:detail", pk=question.pk)
@@ -140,7 +146,11 @@ def question_create(request):
         pub_date = None
 
     if question_text and pub_date is not None:
-        question = Question.objects.create(question_text=question_text, pub_date=pub_date)
+        question = Question.objects.create(
+            question_text=question_text,
+            pub_date=pub_date,
+            is_active=request.POST.get("is_active") == "on",
+        )
         messages.success(request, "Poll created.")
         return redirect(f"{reverse('app:dashboard')}?poll={question.pk}")
     messages.error(request, "Please correct the poll form.")
@@ -176,10 +186,22 @@ def question_update(request, pk):
     if question_text and pub_date is not None:
         question.question_text = question_text
         question.pub_date = pub_date
-        question.save(update_fields=["question_text", "pub_date"])
+        question.is_active = request.POST.get("is_active") == "on"
+        question.save(update_fields=["question_text", "pub_date", "is_active"])
         messages.success(request, "Poll updated.")
     else:
         messages.error(request, "Poll update failed.")
+    return redirect(f"{reverse('app:dashboard')}?poll={pk}")
+
+
+@superuser_required
+def question_toggle_status(request, pk):
+    question = get_object_or_404(Question, pk=pk)
+    if request.method == "POST":
+        question.is_active = not question.is_active
+        question.save(update_fields=["is_active"])
+        state = "activated" if question.is_active else "deactivated"
+        messages.success(request, f"Poll {state}.")
     return redirect(f"{reverse('app:dashboard')}?poll={pk}")
 
 

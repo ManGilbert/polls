@@ -59,6 +59,10 @@
                     <input type="text" name="question_text" class="form-control form-control-sm" placeholder="Poll title" value="{{ create_poll_data.question_text|default:'' }}" required>
                     <label class="form-label mb-0">Publish at</label>
                     <input type="datetime-local" name="pub_date" class="form-control form-control-sm" value="{{ create_poll_data.pub_date|default:'' }}" required>
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" role="switch" id="create-is-active" name="is_active" checked>
+                        <label class="form-check-label small" for="create-is-active">Active poll</label>
+                    </div>
                     {% if form_errors %}
                         <div class="alert alert-danger small py-2 mb-0">
                             {% for error in form_errors %}
@@ -91,7 +95,7 @@
                         <a href="{% url 'app:dashboard' %}?poll={{ question.id }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if page_obj.number %}&page={{ page_obj.number }}{% endif %}" class="poll-link {% if selected_question and selected_question.id == question.id %}active{% endif %}">
                             <div>
                                 <strong>{{ question.question_text }}</strong>
-                                <span>{{ question.pub_date|date:"M d, Y H:i" }}</span>
+                                <span>{{ question.pub_date|date:"M d, Y H:i" }} • {% if question.is_active %}Active{% else %}Inactive{% endif %}</span>
                             </div>
                             <small>{{ question.total_votes }} votes</small>
                         </a>
@@ -128,9 +132,20 @@
                         <input type="text" name="question_text" value="{{ selected_question.question_text }}" class="form-control form-control-sm" required>
                         <label class="form-label mb-0">Publish at</label>
                         <input type="datetime-local" name="pub_date" value="{{ selected_question.pub_date|date:'Y-m-d\\TH:i' }}" class="form-control form-control-sm" required>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" role="switch" id="edit-is-active" name="is_active" {% if selected_question.is_active %}checked{% endif %}>
+                            <label class="form-check-label small" for="edit-is-active">Active poll</label>
+                        </div>
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             <button type="submit" class="btn btn-sm btn-brand"><i class="bi bi-floppy me-1"></i>Update</button>
                         </div>
+                    </form>
+                    <form method="post" action="{% url 'app:question_toggle_status' selected_question.id %}" class="mb-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm {% if selected_question.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                            <i class="bi {% if selected_question.is_active %}bi-pause-circle{% else %}bi-play-circle{% endif %} me-1"></i>
+                            {% if selected_question.is_active %}Set inactive{% else %}Set active{% endif %}
+                        </button>
                     </form>
                     <form method="post" action="{% url 'app:question_delete' selected_question.id %}" class="mb-4">
                         {% csrf_token %}

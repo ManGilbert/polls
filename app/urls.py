@@ -12,6 +12,7 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("dashboard/polls/create/", views.question_create, name="question_create"),
     path("dashboard/polls/<int:pk>/update/", views.question_update, name="question_update"),
+    path("dashboard/polls/<int:pk>/toggle-status/", views.question_toggle_status, name="question_toggle_status"),
     path("dashboard/polls/<int:pk>/delete/", views.question_delete, name="question_delete"),
     path(
         "dashboard/polls/<int:question_pk>/choices/create/",
