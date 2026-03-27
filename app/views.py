@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import F, Prefetch
 from django.http import HttpResponseRedirect
@@ -97,20 +98,30 @@ def vote(request, question_id):
 def dashboard(request):
     selected_question = None
     selected_poll_id = request.GET.get("poll")
-    questions = Question.objects.prefetch_related(
+    search_query = request.GET.get("q", "").strip()
+    questions_queryset = Question.objects.prefetch_related(
         Prefetch("choices", queryset=Choice.objects.order_by("id"))
     )
+    if search_query:
+        questions_queryset = questions_queryset.filter(question_text__icontains=search_query)
+
+    paginator = Paginator(questions_queryset, 5)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    questions = page_obj.object_list
+
     if selected_poll_id:
-        selected_question = get_object_or_404(questions, pk=selected_poll_id)
-    elif questions.exists():
-        selected_question = questions.first()
+        selected_question = get_object_or_404(questions_queryset, pk=selected_poll_id)
+    elif questions:
+        selected_question = questions[0]
 
     context = {
         "questions": questions,
+        "page_obj": page_obj,
+        "search_query": search_query,
         "selected_question": selected_question,
         "recent_votes": Vote.objects.select_related("question", "choice")[:8],
-        "published_count": Question.objects.filter(pub_date__lte=timezone.now()).count(),
-        "total_votes": sum(question.total_votes for question in questions),
+        "published_count": questions_queryset.filter(pub_date__lte=timezone.now()).count(),
+        "total_votes": sum(question.total_votes for question in questions_queryset),
         "create_poll_data": {"question_text": "", "pub_date": ""},
     }
     return render(request, "app/dashboard.html", context)
