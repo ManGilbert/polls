@@ -79,20 +79,18 @@
             <div class="dashboard-panel">
                 <div class="panel-head">
                     <h2 class="h6 mb-1">Poll list</h2>
-                    <p class="small text-secondary mb-0">Auto-search across poll titles, choices, and voter names.</p>
+                    <p class="small text-secondary mb-0">JavaScript live search across poll titles, choices, and voter names.</p>
                 </div>
-                <form method="get" action="{% url 'app:dashboard' %}" class="d-flex gap-2 small mb-3" id="dashboard-search-form">
-                    <input type="text" name="q" value="{{ search_query }}" class="form-control form-control-sm" placeholder="Search all poll records" id="dashboard-search-input" autocomplete="off">
-                    {% if selected_question %}
-                        <input type="hidden" name="poll" value="{{ selected_question.id }}">
-                    {% endif %}
-                    <button type="submit" class="btn btn-sm btn-outline-success">
+                <div class="d-flex gap-2 small mb-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="Search all poll records" id="dashboard-search-input" autocomplete="off">
+                    <button type="button" class="btn btn-sm btn-outline-success" id="dashboard-search-button">
                         <i class="bi bi-search"></i>
                     </button>
-                </form>
-                <div class="vstack gap-2">
+                </div>
+                <div class="small text-secondary mb-2 d-none" id="dashboard-search-status"></div>
+                <div class="vstack gap-2" id="dashboard-poll-list" data-search-url="{% url 'app:dashboard_search' %}">
                     {% for question in questions %}
-                        <a href="{% url 'app:dashboard' %}?poll={{ question.id }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if page_obj.number %}&page={{ page_obj.number }}{% endif %}" class="poll-link {% if selected_question and selected_question.id == question.id %}active{% endif %}">
+                        <a href="{% url 'app:dashboard' %}?poll={{ question.id }}{% if page_obj.number %}&page={{ page_obj.number }}{% endif %}" class="poll-link {% if selected_question and selected_question.id == question.id %}active{% endif %}">
                             <div>
                                 <strong>{{ question.question_text }}</strong>
                                 <span>{{ question.pub_date|date:"M d, Y H:i" }} • {% if question.is_active %}Active{% else %}Inactive{% endif %}</span>
@@ -104,14 +102,14 @@
                     {% endfor %}
                 </div>
                 {% if page_obj.paginator.num_pages > 1 %}
-                    <div class="d-flex justify-content-between align-items-center mt-3 small">
+                    <div class="d-flex justify-content-between align-items-center mt-3 small" id="dashboard-pagination">
                         <div class="text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
                         <div class="d-flex gap-2">
                             {% if page_obj.has_previous %}
-                                <a href="{% url 'app:dashboard' %}?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn btn-sm btn-outline-secondary">Prev</a>
+                                <a href="{% url 'app:dashboard' %}?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-secondary">Prev</a>
                             {% endif %}
                             {% if page_obj.has_next %}
-                                <a href="{% url 'app:dashboard' %}?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="btn btn-sm btn-outline-secondary">Next</a>
+                                <a href="{% url 'app:dashboard' %}?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-secondary">Next</a>
                             {% endif %}
                         </div>
                     </div>
@@ -206,14 +204,75 @@
 </section>
 <script>
     (() => {
-        const form = document.getElementById("dashboard-search-form");
         const input = document.getElementById("dashboard-search-input");
-        if (!form || !input) return;
+        const button = document.getElementById("dashboard-search-button");
+        const list = document.getElementById("dashboard-poll-list");
+        const status = document.getElementById("dashboard-search-status");
+        const pagination = document.getElementById("dashboard-pagination");
+        if (!input || !button || !list || !status) return;
+
+        const defaultMarkup = list.innerHTML;
+        const searchUrl = list.dataset.searchUrl;
         let timerId;
+        let currentController = null;
+
+        const renderResults = (results) => {
+            if (!results.length) {
+                list.innerHTML = `
+                    <p class="small text-secondary mb-0">No matching poll records found.</p>
+                `;
+                return;
+            }
+            list.innerHTML = results.map((result) => `
+                <a href="${result.dashboard_url}" class="poll-link">
+                    <div>
+                        <strong>${result.question_text}</strong>
+                        <span>${result.pub_date} • ${result.is_active ? "Active" : "Inactive"}</span>
+                    </div>
+                    <small>${result.total_votes} votes</small>
+                </a>
+            `).join("");
+        };
+
+        const resetList = () => {
+            list.innerHTML = defaultMarkup;
+            status.classList.add("d-none");
+            status.textContent = "";
+            if (pagination) pagination.classList.remove("d-none");
+        };
+
+        const runSearch = async () => {
+            const query = input.value.trim();
+            if (!query) {
+                resetList();
+                return;
+            }
+
+            if (currentController) currentController.abort();
+            currentController = new AbortController();
+            status.textContent = "Searching all records...";
+            status.classList.remove("d-none");
+            if (pagination) pagination.classList.add("d-none");
+
+            try {
+                const response = await fetch(`${searchUrl}?q=${encodeURIComponent(query)}`, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    signal: currentController.signal,
+                });
+                const payload = await response.json();
+                renderResults(payload.results || []);
+                status.textContent = `${(payload.results || []).length} matching poll record(s).`;
+            } catch (error) {
+                if (error.name === "AbortError") return;
+                status.textContent = "Search is temporarily unavailable.";
+            }
+        };
+
         input.addEventListener("input", () => {
             clearTimeout(timerId);
-            timerId = window.setTimeout(() => form.submit(), 350);
+            timerId = window.setTimeout(runSearch, 300);
         });
+        button.addEventListener("click", runSearch);
     })();
 </script>
 {% endblock %}

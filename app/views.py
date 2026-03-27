@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import F, Prefetch, Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -14,6 +14,20 @@ from .models import Choice, Question, Vote
 
 def superuser_required(view_func):
     return login_required(user_passes_test(lambda user: user.is_superuser)(view_func))
+
+
+def build_dashboard_search_queryset(search_query):
+    questions_queryset = Question.objects.prefetch_related(
+        Prefetch("choices", queryset=Choice.objects.order_by("id"))
+    )
+    if search_query:
+        questions_queryset = questions_queryset.filter(
+            Q(question_text__icontains=search_query)
+            | Q(choices__choice_text__icontains=search_query)
+            | Q(votes_log__voter_name__icontains=search_query)
+            | Q(votes_log__choice__choice_text__icontains=search_query)
+        ).distinct()
+    return questions_queryset
 
 
 class IndexView(generic.ListView):
@@ -104,18 +118,7 @@ def vote(request, question_id):
 def dashboard(request):
     selected_question = None
     selected_poll_id = request.GET.get("poll")
-    search_query = request.GET.get("q", "").strip()
-    questions_queryset = Question.objects.prefetch_related(
-        Prefetch("choices", queryset=Choice.objects.order_by("id"))
-    )
-    if search_query:
-        questions_queryset = questions_queryset.filter(
-            Q(question_text__icontains=search_query)
-            | Q(choices__choice_text__icontains=search_query)
-            | Q(votes_log__voter_name__icontains=search_query)
-            | Q(votes_log__choice__choice_text__icontains=search_query)
-        ).distinct()
-
+    questions_queryset = build_dashboard_search_queryset("")
     paginator = Paginator(questions_queryset, 5)
     page_obj = paginator.get_page(request.GET.get("page"))
     questions = page_obj.object_list
@@ -128,7 +131,6 @@ def dashboard(request):
     context = {
         "questions": questions,
         "page_obj": page_obj,
-        "search_query": search_query,
         "selected_question": selected_question,
         "recent_votes": Vote.objects.select_related("question", "choice")[:8],
         "published_count": questions_queryset.filter(pub_date__lte=timezone.now()).count(),
@@ -136,6 +138,27 @@ def dashboard(request):
         "create_poll_data": {"question_text": "", "pub_date": ""},
     }
     return render(request, "app/dashboard.html", context)
+
+
+@superuser_required
+def dashboard_search(request):
+    search_query = request.GET.get("q", "").strip()
+    if not search_query:
+        return JsonResponse({"results": []})
+
+    questions = build_dashboard_search_queryset(search_query)
+    results = [
+        {
+            "id": question.id,
+            "question_text": question.question_text,
+            "pub_date": timezone.localtime(question.pub_date).strftime("%b %d, %Y %H:%M"),
+            "is_active": question.is_active,
+            "total_votes": question.total_votes,
+            "dashboard_url": f"{reverse('app:dashboard')}?poll={question.id}",
+        }
+        for question in questions[:50]
+    ]
+    return JsonResponse({"results": results})
 
 
 @superuser_required
