@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | ULK Polls{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <span class="hero-chip"><i class="bi bi-person-lock me-1"></i>Superuser area</span>
+            <h1 class="h4 mt-3 mb-1">Poll management dashboard</h1>
+            <p class="small text-secondary mb-0">Create, update, and remove polls and choices from one responsive page.</p>
+        </div>
+        <a href="/admin/" class="btn btn-sm btn-outline-success px-3">
+            <i class="bi bi-arrow-up-right-square me-1"></i>Django Admin
+        </a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100">
+                <span class="icon-wrap"><i class="bi bi-grid-fill"></i></span>
+                <strong>{{ questions|length }}</strong>
+                <span>Total polls</span>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100">
+                <span class="icon-wrap"><i class="bi bi-megaphone"></i></span>
+                <strong>{{ published_count }}</strong>
+                <span>Published</span>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100">
+                <span class="icon-wrap"><i class="bi bi-person-lines-fill"></i></span>
+                <strong>{{ total_votes }}</strong>
+                <span>Votes cast</span>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100">
+                <span class="icon-wrap"><i class="bi bi-hourglass-split"></i></span>
+                <strong>{{ recent_votes|length }}</strong>
+                <span>Recent records</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-4">
+            <div class="dashboard-panel mb-3">
+                <div class="panel-head">
+                    <h2 class="h6 mb-1">Create poll</h2>
+                    <p class="small text-secondary mb-0">Use short titles and schedule publication.</p>
+                </div>
+                <form method="post" action="{% url 'app:question_create' %}" class="vstack gap-2 small">
+                    {% csrf_token %}
+                    <label class="form-label mb-0">Question</label>
+                    <input type="text" name="question_text" class="form-control form-control-sm" placeholder="Poll title" value="{{ create_poll_data.question_text|default:'' }}" required>
+                    <label class="form-label mb-0">Publish at</label>
+                    <input type="datetime-local" name="pub_date" class="form-control form-control-sm" value="{{ create_poll_data.pub_date|default:'' }}" required>
+                    {% if form_errors %}
+                        <div class="alert alert-danger small py-2 mb-0">
+                            {% for error in form_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-sm btn-brand mt-2">
+                        <i class="bi bi-folder-plus me-1"></i>Create
+                    </button>
+                </form>
+            </div>
+
+            <div class="dashboard-panel">
+                <div class="panel-head">
+                    <h2 class="h6 mb-1">Poll list</h2>
+                    <p class="small text-secondary mb-0">Select a poll to edit choices and details.</p>
+                </div>
+                <div class="vstack gap-2">
+                    {% for question in questions %}
+                        <a href="{% url 'app:dashboard' %}?poll={{ question.id }}" class="poll-link {% if selected_question and selected_question.id == question.id %}active{% endif %}">
+                            <div>
+                                <strong>{{ question.question_text }}</strong>
+                                <span>{{ question.pub_date|date:"M d, Y H:i" }}</span>
+                            </div>
+                            <small>{{ question.total_votes }} votes</small>
+                        </a>
+                    {% empty %}
+                        <p class="small text-secondary mb-0">No polls created yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="dashboard-panel h-100">
+                <div class="panel-head">
+                    <h2 class="h6 mb-1">Selected poll</h2>
+                    <p class="small text-secondary mb-0">Update the poll and manage its options in place.</p>
+                </div>
+                {% if selected_question %}
+                    <form method="post" action="{% url 'app:question_update' selected_question.id %}" class="vstack gap-2 small mb-4">
+                        {% csrf_token %}
+                        <label class="form-label mb-0">Question</label>
+                        <input type="text" name="question_text" value="{{ selected_question.question_text }}" class="form-control form-control-sm" required>
+                        <label class="form-label mb-0">Publish at</label>
+                        <input type="datetime-local" name="pub_date" value="{{ selected_question.pub_date|date:'Y-m-d\\TH:i' }}" class="form-control form-control-sm" required>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <button type="submit" class="btn btn-sm btn-brand"><i class="bi bi-floppy me-1"></i>Update</button>
+                        </div>
+                    </form>
+                    <form method="post" action="{% url 'app:question_delete' selected_question.id %}" class="mb-4">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle me-1"></i>Delete poll</button>
+                    </form>
+
+                    <div class="divider-label">Choices</div>
+                    <form method="post" action="{% url 'app:choice_create' selected_question.id %}" class="d-flex gap-2 align-items-start small mb-3">
+                        {% csrf_token %}
+                        <div class="flex-grow-1"><input type="text" name="choice_text" class="form-control form-control-sm" placeholder="Choice text" required></div>
+                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-node-plus"></i></button>
+                    </form>
+
+                    <div class="vstack gap-2">
+                        {% for choice in selected_question.choices.all %}
+                            <div class="choice-admin-row">
+                                <form method="post" action="{% url 'app:choice_update' choice.id %}" class="d-flex gap-2 align-items-center flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="text" name="choice_text" value="{{ choice.choice_text }}" class="form-control form-control-sm">
+                                    <span class="badge text-bg-light">{{ choice.votes }}</span>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-floppy"></i></button>
+                                </form>
+                                <form method="post" action="{% url 'app:choice_delete' choice.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="small text-secondary mb-0">Add choices for this poll.</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="small text-secondary mb-0">Choose a poll from the list or create a new one.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-xl-3">
+            <div class="dashboard-panel h-100">
+                <div class="panel-head">
+                    <h2 class="h6 mb-1">Recent votes</h2>
+                    <p class="small text-secondary mb-0">Latest submitted voter names.</p>
+                </div>
+                <div class="vstack gap-2">
+                    {% for vote in recent_votes %}
+                        <div class="vote-log-item">
+                            <strong>{{ vote.voter_name }}</strong>
+                            <span>{{ vote.choice.choice_text }}</span>
+                            <small>{{ vote.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                    {% empty %}
+                        <p class="small text-secondary mb-0">No votes yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

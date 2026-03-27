@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}ULK Polls{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container py-4 py-lg-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="hero-chip"><i class="bi bi-stars me-1"></i>Public voting open</span>
+                <h1 class="display-6 mt-3 mb-2">Vote on campus-style polls with a clean ULK-inspired look.</h1>
+                <p class="text-secondary small hero-copy mb-3">Guests can vote without login, while administrators manage every poll from one compact dashboard.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="#polls" class="btn btn-sm btn-brand px-3"><i class="bi bi-grid-1x2-fill me-1"></i>Browse Polls</a>
+                    {% if request.user.is_authenticated and request.user.is_superuser %}
+                        <a href="{% url 'app:dashboard' %}" class="btn btn-sm btn-outline-success px-3"><i class="bi bi-window-stack me-1"></i>Open Dashboard</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="feature-panel">
+                    <div class="row g-3 small">
+                        <div class="col-6">
+                            <div class="stat-card">
+                                <span class="icon-wrap"><i class="bi bi-graph-up-arrow"></i></span>
+                                <strong>{{ latest_question_list|length }}</strong>
+                                <span>Active polls</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-card">
+                                <span class="icon-wrap"><i class="bi bi-tablet-landscape"></i></span>
+                                <strong>100%</strong>
+                                <span>Responsive</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mini-banner">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                Small components, quick voting, and a dashboard reserved for superusers.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="polls" class="container pb-5">
+    <div class="section-head d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h5 mb-1">Latest Polls</h2>
+            <p class="small text-secondary mb-0">Choose an option, type your name, and submit your vote.</p>
+        </div>
+    </div>
+    <div class="row g-3">
+        {% for card in poll_cards %}
+            {% with question=card.question %}
+            <div class="col-12 col-lg-6">
+                <div class="poll-card h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                        <div>
+                            <span class="small text-success-emphasis fw-semibold"><i class="bi bi-check2-square me-1"></i>Open poll</span>
+                            <h3 class="h6 mt-2 mb-1">{{ question.question_text }}</h3>
+                            <p class="small text-secondary mb-0">Published {{ question.pub_date|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <a href="{% url 'app:results' question.id %}" class="icon-link small text-decoration-none">Results <i class="bi bi-arrow-right-short"></i></a>
+                    </div>
+                    <form action="{% url 'app:vote' question.id %}" method="post" class="small">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label mb-1" for="voter-name-{{ question.id }}">Your name</label>
+                            <input id="voter-name-{{ question.id }}" name="voter_name" type="text" class="form-control form-control-sm" placeholder="Type your name" required>
+                        </div>
+                        <div class="choice-group mb-3">
+                            <ul>
+                                {% for choice in question.choices.all %}
+                                    <li>
+                                        <label for="choice-{{ question.id }}-{{ choice.id }}">
+                                            <input id="choice-{{ question.id }}-{{ choice.id }}" type="radio" name="choice" value="{{ choice.id }}" required>
+                                            <span>{{ choice.choice_text }}</span>
+                                        </label>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="tiny-note"><i class="bi bi-pie-chart me-1"></i>{{ question.total_votes }} votes</span>
+                            <button class="btn btn-sm btn-brand px-3" type="submit">
+                                <i class="bi bi-send-check me-1"></i>Vote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="bi bi-folder2-open"></i>
+                    <h3 class="h6 mt-3">No polls are available yet.</h3>
+                    <p class="small text-secondary mb-0">Create the first poll from the dashboard after logging in as superuser.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

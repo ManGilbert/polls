@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %}Admin Login | ULK Polls{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-4 col-lg-5 col-md-7">
+            <div class="login-card">
+                <div class="text-center mb-4">
+                    <img src="{% static 'img/ulk-polls-mark.svg' %}" alt="ULK Polls" class="login-logo">
+                    <h1 class="h4 mt-3 mb-1">Superuser Login</h1>
+                    <p class="small text-secondary mb-0">Use Django superuser credentials to open the dashboard.</p>
+                </div>
+                <form method="post" class="vstack gap-3 small">
+                    {% csrf_token %}
+                    <div>
+                        <label class="form-label mb-1" for="id_username">Username</label>
+                        <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" class="form-control form-control-sm" required id="id_username">
+                    </div>
+                    <div>
+                        <label class="form-label mb-1" for="id_password">Password</label>
+                        <input type="password" name="password" autocomplete="current-password" class="form-control form-control-sm" required id="id_password">
+                    </div>
+                    {% if form.errors %}
+                        <div class="alert alert-danger small py-2 mb-0">Username or password is not valid.</div>
+                    {% endif %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-sm btn-brand w-100">
+                        <i class="bi bi-door-open me-1"></i>Login
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
