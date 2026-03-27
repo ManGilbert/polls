@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import F, Prefetch
+from django.db.models import F, Prefetch, Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -109,7 +109,12 @@ def dashboard(request):
         Prefetch("choices", queryset=Choice.objects.order_by("id"))
     )
     if search_query:
-        questions_queryset = questions_queryset.filter(question_text__icontains=search_query)
+        questions_queryset = questions_queryset.filter(
+            Q(question_text__icontains=search_query)
+            | Q(choices__choice_text__icontains=search_query)
+            | Q(votes_log__voter_name__icontains=search_query)
+            | Q(votes_log__choice__choice_text__icontains=search_query)
+        ).distinct()
 
     paginator = Paginator(questions_queryset, 5)
     page_obj = paginator.get_page(request.GET.get("page"))
