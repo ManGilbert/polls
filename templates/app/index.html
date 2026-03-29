@@ -1,43 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}ULK Polls{% endblock %}
+{% block title %}Home - ULK Polls | Institutional Voting Platform{% endblock %}
 
 {% block content %}
+<!-- Hero Section -->
 <section class="hero-section">
-    <div class="container py-4 py-lg-5">
+    <div class="container py-5 py-lg-6">
         <div class="row align-items-center g-4">
             <div class="col-lg-7">
-                <span class="hero-chip"><i class="bi bi-stars me-1"></i>Public voting open</span>
-                <h1 class="display-6 mt-3 mb-2">Vote on campus-style polls with a clean ULK-inspired look.</h1>
-                <p class="text-secondary small hero-copy mb-3">Guests can vote without login, while administrators manage every poll from one compact dashboard.</p>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="#polls" class="btn btn-sm btn-brand px-3"><i class="bi bi-grid-1x2-fill me-1"></i>Browse Polls</a>
+                <span class="hero-chip"><i class="bi bi-check-circle-fill me-1"></i>Active Voting Session</span>
+                <h1 class="display-5 mt-4 mb-3 fw-800">Secure Polling Platform for ULK</h1>
+                <p class="text-secondary lead mb-4">Participate in institutional polls with a transparent, secure, and user-friendly voting system. Your voice matters at Kigali Independent University.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="#polls" class="btn btn-brand px-4 py-2">
+                        <i class="bi bi-box-arrow-down me-2"></i>Browse Active Polls
+                    </a>
                     {% if request.user.is_authenticated and request.user.is_superuser %}
-                        <a href="{% url 'app:dashboard' %}" class="btn btn-sm btn-outline-success px-3"><i class="bi bi-window-stack me-1"></i>Open Dashboard</a>
+                        <a href="{% url 'app:dashboard' %}" class="btn btn-outline-dark px-4 py-2">
+                            <i class="bi bi-speedometer2 me-2"></i>Admin Dashboard
+                        </a>
                     {% endif %}
                 </div>
             </div>
             <div class="col-lg-5">
                 <div class="feature-panel">
-                    <div class="row g-3 small">
+                    <div class="row g-3">
                         <div class="col-6">
                             <div class="stat-card">
-                                <span class="icon-wrap"><i class="bi bi-graph-up-arrow"></i></span>
+                                <span class="icon-wrap"><i class="bi bi-check2-all"></i></span>
                                 <strong>{{ latest_question_list|length }}</strong>
-                                <span>Active polls</span>
+                                <span>Active Polls</span>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="stat-card">
-                                <span class="icon-wrap"><i class="bi bi-tablet-landscape"></i></span>
-                                <strong>100%</strong>
-                                <span>Responsive</span>
+                                <span class="icon-wrap"><i class="bi bi-people-fill"></i></span>
+                                <strong>{{ total_votes }}</strong>
+                                <span>Total Votes</span>
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="mini-banner">
-                                <i class="bi bi-lightbulb me-2"></i>
-                                Small components, quick voting, and a dashboard reserved for superusers.
+                                <i class="bi bi-shield-check me-2" style="color: #1e3a8a;"></i>
+                                <span style="color: #374151;">Secure, transparent voting for the ULK community</span>
                             </div>
                         </div>
                     </div>
@@ -47,11 +52,62 @@
     </div>
 </section>
 
-<section id="polls" class="container pb-5">
-    <div class="section-head d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="h5 mb-1">Latest Polls</h2>
-            <p class="small text-secondary mb-0">Choose an option, type your name, and submit your vote.</p>
+<!-- Key Features Section -->
+<section class="py-5" style="background: #f9fafb; border-top: 1px solid #e5e7eb;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h3 fw-800 mb-2">Why Choose ULK Polls?</h2>
+            <p class="text-secondary">Professional polling platform trusted by the ULK community</p>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 text-center">
+                    <div class="icon-wrap mx-auto mb-3" style="width: 3rem; height: 3rem; font-size: 1.5rem;">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h5 class="fw-700 mb-2">Secure Voting</h5>
+                    <p class="small text-secondary mb-0">Your vote is protected with modern security standards</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 text-center">
+                    <div class="icon-wrap mx-auto mb-3" style="width: 3rem; height: 3rem; font-size: 1.5rem;">
+                        <i class="bi bi-eye-fill"></i>
+                    </div>
+                    <h5 class="fw-700 mb-2">Transparent Results</h5>
+                    <p class="small text-secondary mb-0">Real-time results visibility for all participants</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 text-center">
+                    <div class="icon-wrap mx-auto mb-3" style="width: 3rem; height: 3rem; font-size: 1.5rem;">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h5 class="fw-700 mb-2">Mobile Friendly</h5>
+                    <p class="small text-secondary mb-0">Vote anytime, anywhere from any device</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 text-center">
+                    <div class="icon-wrap mx-auto mb-3" style="width: 3rem; height: 3rem; font-size: 1.5rem;">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h5 class="fw-700 mb-2">Live Analytics</h5>
+                    <p class="small text-secondary mb-0">Detailed voting statistics and visualizations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Active Polls Section -->
+<section id="polls" class="container py-5">
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 fw-800 mb-1">Active Polls</h2>
+                <p class="text-secondary mb-0">Select a poll below and cast your vote. Your participation is valuable to our community.</p>
+            </div>
         </div>
     </div>
     <div class="row g-3">
@@ -59,19 +115,23 @@
             {% with question=card.question %}
             <div class="col-12 col-lg-6">
                 <div class="poll-card h-100">
-                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                        <div>
-                            <span class="small text-success-emphasis fw-semibold"><i class="bi bi-check2-square me-1"></i>Open poll</span>
-                            <h3 class="h6 mt-2 mb-1">{{ question.question_text }}</h3>
-                            <p class="small text-secondary mb-0">Published {{ question.pub_date|date:"M d, Y H:i" }}</p>
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div class="flex-grow-1">
+                            <span class="hero-chip"><i class="bi bi-megaphone me-1"></i>Open Poll</span>
+                            <h3 class="h6 mt-2 mb-1 fw-700" style="color: #1f2937;">{{ question.question_text }}</h3>
+                            <p class="small text-secondary mb-0">
+                                <i class="bi bi-calendar-event me-1"></i>Published {{ question.pub_date|date:"M d, Y" }}
+                            </p>
                         </div>
-                        <a href="{% url 'app:results' question.id %}" class="icon-link small text-decoration-none">Results <i class="bi bi-arrow-right-short"></i></a>
+                        <a href="{% url 'app:results' question.id %}" class="btn btn-sm btn-outline-dark">
+                            <i class="bi bi-graph-up me-1"></i>Results
+                        </a>
                     </div>
                     <form action="{% url 'app:vote' question.id %}" method="post" class="small">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label mb-1" for="voter-name-{{ question.id }}">Your name</label>
-                            <input id="voter-name-{{ question.id }}" name="voter_name" type="text" class="form-control form-control-sm" placeholder="Type your name" required>
+                            <label class="form-label mb-2 fw-600" for="voter-name-{{ question.id }}">Your Name</label>
+                            <input id="voter-name-{{ question.id }}" name="voter_name" type="text" class="form-control form-control-sm" placeholder="Enter your full name" required>
                         </div>
                         <div class="choice-group mb-3">
                             <ul>
@@ -79,16 +139,16 @@
                                     <li>
                                         <label for="choice-{{ question.id }}-{{ choice.id }}">
                                             <input id="choice-{{ question.id }}-{{ choice.id }}" type="radio" name="choice" value="{{ choice.id }}" required>
-                                            <span>{{ choice.choice_text }}</span>
+                                            <span style="font-weight: 500;">{{ choice.choice_text }}</span>
                                         </label>
                                     </li>
                                 {% endfor %}
                             </ul>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="tiny-note"><i class="bi bi-pie-chart me-1"></i>{{ question.total_votes }} votes</span>
+                            <span class="tiny-note"><i class="bi bi-graph-up me-1"></i>{{ question.total_votes }} votes cast</span>
                             <button class="btn btn-sm btn-brand px-3" type="submit">
-                                <i class="bi bi-send-check me-1"></i>Vote
+                                <i class="bi bi-check-circle me-1"></i>Submit Vote
                             </button>
                         </div>
                     </form>
@@ -97,13 +157,70 @@
             {% endwith %}
         {% empty %}
             <div class="col-12">
-                <div class="empty-state">
-                    <i class="bi bi-folder2-open"></i>
-                    <h3 class="h6 mt-3">No polls are available yet.</h3>
-                    <p class="small text-secondary mb-0">Create the first poll from the dashboard after logging in as superuser.</p>
+                <div class="empty-state" style="background: #f9fafb;">
+                    <i class="bi bi-inbox"></i>
+                    <h3 class="h6 mt-3 fw-700">No Active Polls</h3>
+                    <p class="small text-secondary mb-0">No polls are currently available. Please check back later for new voting opportunities.</p>
+                    {% if request.user.is_authenticated and request.user.is_superuser %}
+                        <div class="mt-3">
+                            <a href="{% url 'app:dashboard' %}" class="btn btn-sm btn-brand">
+                                <i class="bi bi-plus-circle me-1"></i>Create a Poll
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
     </div>
 </section>
+
+<!-- About Section -->
+<section id="about" class="py-5" style="background: #f9fafb; border-top: 1px solid #e5e7eb;">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <h2 class="h3 fw-800 mb-3">About ULK Polls</h2>
+                <p class="text-secondary mb-3">
+                    ULK Polls is an institutional voting platform designed specifically for Kigali Independent University. 
+                    We provide a secure, transparent, and inclusive environment for the entire ULK community to participate 
+                    in institutional decision-making processes.
+                </p>
+                <p class="text-secondary mb-3">
+                    Whether you're voting on student affairs, academic initiatives, or community matters, our platform 
+                    ensures your voice is heard and counted. With real-time results and comprehensive analytics, we're 
+                    committed to supporting a more engaged and informed university community.
+                </p>
+                <div class="d-flex gap-3">
+                    <div>
+                        <h5 class="fw-700 mb-1" style="color: #1e3a8a;">{{ latest_question_list|length }}+</h5>
+                        <p class="small text-secondary m-0">Active Polls</p>
+                    </div>
+                    <div>
+                        <h5 class="fw-700 mb-1" style="color: #1e3a8a;">{{ total_votes }}+</h5>
+                        <p class="small text-secondary m-0">Community Votes</p>
+                    </div>
+                    <div>
+                        <h5 class="fw-700 mb-1" style="color: #1e3a8a;">100%</h5>
+                        <p class="small text-secondary m-0">Secure Platform</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="feature-panel">
+                    <div class="poll-card" style="border: 1px solid #e5e7eb;">
+                        <h5 class="fw-700 mb-3"><i class="bi bi-info-circle me-2" style="color: #1e3a8a;"></i>How It Works</h5>
+                        <ol class="small mb-0" style="color: #6b7280;">
+                            <li class="mb-2">Browse available polls from the home page</li>
+                            <li class="mb-2">Enter your name and select your preferred option</li>
+                            <li class="mb-2">Click "Submit Vote" to record your choice</li>
+                            <li class="mb-2">View real-time results and analytics</li>
+                            <li>Share results with the ULK community</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}

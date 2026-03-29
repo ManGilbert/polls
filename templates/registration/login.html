@@ -1,39 +1,81 @@
 {% extends "base.html" %}
 {% load static %}
 
-
-{% block title %}Admin Login | ULK Polls{% endblock %}
+{% block title %}Administrator Login | ULK Polls{% endblock %}
 
 {% block content %}
 <section class="container py-5">
     <div class="row justify-content-center">
         <div class="col-xl-4 col-lg-5 col-md-7">
             <div class="login-card">
-                <div class="text-center mb-4">
-                    <img src="{% static 'img/ulk-polls-mark.svg' %}" alt="ULK Polls" class="login-logo">
-                    <h1 class="h4 mt-3 mb-1">Superuser Login</h1>
-                    <p class="small text-secondary mb-0">Use Django superuser credentials to open the dashboard.</p>
+                <!-- Logo Section -->
+                <div class="text-center mb-5">
+                    <div class="mb-3">
+                        <i class="bi bi-bar-chart-fill" style="color: #1e3a8a; font-size: 2.5rem;"></i>
+                    </div>
+                    <h1 class="h4 fw-800 mb-2">Administrator Login</h1>
+                    <p class="small text-secondary mb-0">Access the ULK Polls management dashboard with your superuser credentials.</p>
                 </div>
-                <form method="post" class="vstack gap-3 small">
+
+                <!-- Login Form -->
+                <form method="post" class="vstack gap-3">
                     {% csrf_token %}
+                    
+                    <!-- Username Field -->
                     <div>
-                        <label class="form-label mb-1" for="id_username">Username</label>
-                        <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" class="form-control form-control-sm" required id="id_username">
+                        <label class="form-label mb-2 fw-600" for="id_username">
+                            <i class="bi bi-person me-2" style="color: #1e3a8a;"></i>Username
+                        </label>
+                        <input type="text" 
+                               name="username" 
+                               autofocus 
+                               autocapitalize="none" 
+                               autocomplete="username" 
+                               maxlength="150" 
+                               class="form-control form-control-sm" 
+                               required 
+                               id="id_username"
+                               placeholder="Enter your username">
                     </div>
+
+                    <!-- Password Field -->
                     <div>
-                        <label class="form-label mb-1" for="id_password">Password</label>
-                        <input type="password" name="password" autocomplete="current-password" class="form-control form-control-sm" required id="id_password">
+                        <label class="form-label mb-2 fw-600" for="id_password">
+                            <i class="bi bi-lock me-2" style="color: #1e3a8a;"></i>Password
+                        </label>
+                        <input type="password" 
+                               name="password" 
+                               autocomplete="current-password" 
+                               class="form-control form-control-sm" 
+                               required 
+                               id="id_password"
+                               placeholder="Enter your password">
                     </div>
+
+                    <!-- Error Messages -->
                     {% if form.errors %}
-                        <div class="alert alert-danger small py-2 mb-0">Username or password is not valid.</div>
+                        <div class="alert alert-danger small py-3 mb-0">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <strong>Login Failed:</strong> Invalid username or password. Please try again.
+                        </div>
                     {% endif %}
+
+                    <!-- Hidden Next Field -->
                     {% if next %}
                         <input type="hidden" name="next" value="{{ next }}">
                     {% endif %}
-                    <button type="submit" class="btn btn-sm btn-brand w-100">
-                        <i class="bi bi-door-open me-1"></i>Login
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-brand w-100 py-2 mt-2">
+                        <i class="bi bi-unlock me-2"></i>Sign In
                     </button>
                 </form>
+
+                <!-- Info Box -->
+                <div class="alert alert-info small mt-4 py-3 mb-0" style="background: #f3f4f6; border: 1px solid #d1d5db; border-left: 4px solid #1e3a8a;">
+                    <i class="bi bi-info-circle me-2" style="color: #1e3a8a;"></i>
+                    <strong>Superuser Only:</strong> This dashboard is restricted to superuser accounts only.
+                </div>
             </div>
         </div>
     </div>

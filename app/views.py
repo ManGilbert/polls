@@ -44,6 +44,7 @@ class IndexView(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["poll_cards"] = [{"question": question} for question in context["latest_question_list"]]
+        context["total_votes"] = Vote.objects.count()
         return context
 
 

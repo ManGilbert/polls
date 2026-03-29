@@ -1,54 +1,142 @@
 {% extends "base.html" %}
 
-{% block title %}{{ question.question_text }} | ULK Polls{% endblock %}
+{% block title %}{{ question.question_text }} - Vote | ULK Polls{% endblock %}
 
 {% block content %}
-<section class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-xl-7 col-lg-8">
-            <div class="poll-card">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                    <div>
-                        <span class="hero-chip"><i class="bi bi-bullseye me-1"></i>Vote now</span>
-                        <h1 class="h4 mt-3 mb-1">{{ question.question_text }}</h1>
-                        <p class="small text-secondary mb-0">Published {{ question.pub_date|date:"M d, Y H:i" }}</p>
-                    </div>
-                    <a class="btn btn-sm btn-outline-success" href="{% url 'app:results' question.id %}">
-                        <i class="bi bi-graph-up me-1"></i>Results
-                    </a>
-                </div>
-                <form action="{% url 'app:vote' question.id %}" method="post" class="small">
-                    {% csrf_token %}
-                    {% if errors %}
-                        <div class="alert alert-danger small py-2">
-                            {% for error in errors %}
-                                <div>{{ error }}</div>
-                            {% endfor %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-7 col-lg-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb small mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'app:index' %}" class="text-decoration-none">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#" onclick="history.back(); return false;" class="text-decoration-none">Back</a></li>
+                        <li class="breadcrumb-item active">Vote</li>
+                    </ol>
+                </nav>
+
+                <!-- Poll Card -->
+                <div class="poll-card">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                        <div class="flex-grow-1">
+                            <span class="hero-chip"><i class="bi bi-target me-1"></i>Cast Your Vote</span>
+                            <h1 class="h4 mt-3 mb-2 fw-800" style="color: #1f2937;">{{ question.question_text }}</h1>
+                            <p class="small text-secondary mb-0">
+                                <i class="bi bi-calendar-event me-1"></i>Published {{ question.pub_date|date:"F d, Y \a\t H:i" }}
+                            </p>
                         </div>
-                    {% endif %}
-                    <div class="mb-3">
-                        <label class="form-label mb-1" for="voter-name">Your name</label>
-                        <input id="voter-name" name="voter_name" type="text" class="form-control form-control-sm" placeholder="Type your name" value="{{ submitted_name|default:'' }}" required>
                     </div>
-                    <div class="choice-group mb-3">
-                        <ul>
-                            {% for choice in question.choices.all %}
-                                <li>
-                                    <label for="choice-{{ choice.id }}">
-                                        <input id="choice-{{ choice.id }}" type="radio" name="choice" value="{{ choice.id }}" {% if selected_choice_id == choice.id %}checked{% endif %} required>
-                                        <span>{{ choice.choice_text }}</span>
-                                    </label>
-                                </li>
-                            {% endfor %}
-                        </ul>
+
+                    <div class="mini-banner mb-4" style="background: #f0f9ff; border-color: #bfdbfe;">
+                        <i class="bi bi-info-circle me-2" style="color: #1e3a8a;"></i>
+                        <span style="color: #1e3a8a; font-weight: 500;">Your participation helps shape decisions at ULK. Vote now!</span>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="submit" class="btn btn-sm btn-brand px-3">
-                            <i class="bi bi-send-check me-1"></i>Submit Vote
-                        </button>
-                        <a href="{% url 'app:index' %}" class="btn btn-sm btn-outline-secondary px-3">Back</a>
+
+                    <!-- Voting Form -->
+                    <form action="{% url 'app:vote' question.id %}" method="post" class="small">
+                        {% csrf_token %}
+                        
+                        <!-- Error Messages -->
+                        {% if errors %}
+                            <div class="alert alert-danger small py-3 mb-4" role="alert">
+                                <strong><i class="bi bi-exclamation-circle me-2"></i>Voting Error:</strong>
+                                {% for error in errors %}
+                                    <div class="mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Voter Name Field -->
+                        <div class="mb-4">
+                            <label class="form-label mb-2 fw-600" for="voter-name">
+                                <i class="bi bi-person me-2" style="color: #1e3a8a;"></i>Your Full Name
+                            </label>
+                            <input id="voter-name" 
+                                   name="voter_name" 
+                                   type="text" 
+                                   class="form-control form-control-sm" 
+                                   placeholder="Enter your full name" 
+                                   value="{{ submitted_name|default:'' }}" 
+                                   required
+                                   style="font-size: 0.9rem;">
+                            <small class="text-secondary">Your name will be visible in the voting records.</small>
+                        </div>
+
+                        <!-- Choice Selection -->
+                        <div class="mb-4">
+                            <label class="form-label mb-3 fw-600">
+                                <i class="bi bi-question-circle me-2" style="color: #1e3a8a;"></i>Select Your Choice
+                            </label>
+                            <div class="choice-group">
+                                <ul>
+                                    {% for choice in question.choices.all %}
+                                        <li>
+                                            <label for="choice-{{ choice.id }}" style="cursor: pointer;">
+                                                <input id="choice-{{ choice.id }}" 
+                                                       type="radio" 
+                                                       name="choice" 
+                                                       value="{{ choice.id }}" 
+                                                       {% if selected_choice_id == choice.id %}checked{% endif %} 
+                                                       required>
+                                                <span style="font-weight: 500; color: #374151;">{{ choice.choice_text }}</span>
+                                            </label>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-wrap gap-2 pt-2 border-top border-1">
+                            <button type="submit" class="btn btn-sm btn-brand px-4 py-2">
+                                <i class="bi bi-check-circle me-2"></i>Submit Vote
+                            </button>
+                            <a href="{% url 'app:index' %}" class="btn btn-sm btn-outline-dark px-4 py-2">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Polls
+                            </a>
+                            <a href="{% url 'app:results' question.id %}" class="btn btn-sm btn-outline-dark px-4 py-2">
+                                <i class="bi bi-graph-up me-2"></i>View Results
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Poll Info Footer -->
+                    <div class="mt-4 pt-4 border-top border-1">
+                        <div class="row g-3 text-center small">
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1">Total Votes</p>
+                                <p class="fw-700 h6 mb-0" style="color: #1e3a8a;">{{ question.total_votes }}</p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1">Status</p>
+                                <p class="fw-700 h6 mb-0">
+                                    {% if question.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Closed</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1">Choices</p>
+                                <p class="fw-700 h6 mb-0">{{ question.choices.count }}</p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1">Options</p>
+                                <p class="fw-700 h6 mb-0">
+                                    <a href="{% url 'app:results' question.id %}" class="text-decoration-none" style="color: #2563eb;">View</a>
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- Information Box -->
+                <div class="alert alert-info small mt-4 py-3" style="background: #f3f4f6; border: 1px solid #d1d5db; border-left: 4px solid #1e3a8a;">
+                    <i class="bi bi-shield-check me-2" style="color: #1e3a8a;"></i>
+                    <strong>Secure Voting:</strong> Your vote is securely recorded and protected. Only your name and choice will be stored.
+                </div>
             </div>
         </div>
     </div>

@@ -1,42 +1,108 @@
 {% extends "base.html" %}
 
-{% block title %}Results | ULK Polls{% endblock %}
+{% block title %}Poll Results - {{ question.question_text }} | ULK Polls{% endblock %}
 
 {% block content %}
-<section class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-xl-8 col-lg-9">
-            <div class="poll-card">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                    <div>
-                        <span class="hero-chip"><i class="bi bi-activity me-1"></i>Live results</span>
-                        <h1 class="h4 mt-3 mb-1">{{ question.question_text }}</h1>
-                        <p class="small text-secondary mb-0">{{ question.total_votes }} total votes</p>
-                    </div>
-                    <a href="{% url 'app:detail' question.id %}" class="btn btn-sm btn-outline-success px-3">
-                        <i class="bi bi-arrow-repeat me-1"></i>Vote again
-                    </a>
-                </div>
-                <div class="vstack gap-3">
-                    {% for choice in question.choices.all %}
-                        <div class="result-row">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <strong>{{ choice.choice_text }}</strong>
-                                <span>{{ choice.votes }} vote{{ choice.votes|pluralize }}</span>
-                            </div>
-                            {% if question.total_votes %}
-                                <div class="progress result-progress" role="progressbar" aria-valuenow="{{ choice.votes }}" aria-valuemin="0" aria-valuemax="{{ question.total_votes }}">
-                                    <div class="progress-bar" style="width:{% widthratio choice.votes question.total_votes 100 %}%"></div>
-                                </div>
-                            {% else %}
-                                <div class="progress result-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                                    <div class="progress-bar" style="width:0%"></div>
-                                </div>
-                            {% endif %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-8 col-lg-9">
+                <!-- Poll Results Card -->
+                <div class="poll-card">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                        <div class="flex-grow-1">
+                            <span class="hero-chip"><i class="bi bi-graph-up me-1"></i>Live Results</span>
+                            <h1 class="h4 mt-3 mb-2 fw-800" style="color: #1f2937;">{{ question.question_text }}</h1>
+                            <p class="small text-secondary mb-0">
+                                <i class="bi bi-hand-thumbs-up me-1"></i>{{ question.total_votes }} total vote{{ question.total_votes|pluralize }}
+                            </p>
                         </div>
-                    {% empty %}
-                        <p class="small text-secondary mb-0">This poll has no choices yet.</p>
-                    {% endfor %}
+                        <a href="{% url 'app:detail' question.id %}" class="btn btn-sm btn-brand px-3">
+                            <i class="bi bi-check-circle me-1"></i>Vote
+                        </a>
+                    </div>
+
+                    <!-- Results Summary -->
+                    <div class="mini-banner mb-4" style="background: #f0f9ff; border-color: #bfdbfe;">
+                        <i class="bi bi-info-circle me-2" style="color: #1e3a8a;"></i>
+                        <span style="color: #1e3a8a; font-weight: 500;">Results are updated in real-time as votes are cast</span>
+                    </div>
+
+                    <!-- Results Breakdown -->
+                    <div class="vstack gap-3">
+                        {% for choice in question.choices.all %}
+                            <div class="result-row">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong style="color: #1f2937; font-size: 0.95rem;">
+                                        <i class="bi bi-check-circle-fill me-2" style="color: #1e3a8a;"></i>{{ choice.choice_text }}
+                                    </strong>
+                                    <div class="text-end">
+                                        <div class="fw-700" style="color: #1e3a8a; font-size: 1.1rem;">{{ choice.votes }}</div>
+                                        <small class="text-secondary">
+                                            {% if question.total_votes > 0 %}
+                                                {{ choice.votes|floatformat:0 }}/{{ question.total_votes }} ({% widthratio choice.votes question.total_votes 100 %}%)
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% if question.total_votes %}
+                                    <div class="progress result-progress" role="progressbar" aria-valuenow="{{ choice.votes }}" aria-valuemin="0" aria-valuemax="{{ question.total_votes }}">
+                                        <div class="progress-bar" style="width:{% widthratio choice.votes question.total_votes 100 %}%"></div>
+                                    </div>
+                                {% else %}
+                                    <div class="progress result-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar" style="width:0%"></div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <div class="empty-state" style="background: #f9fafb;">
+                                <i class="bi bi-inbox"></i>
+                                <h3 class="h6 mt-3 fw-700">No Choices Available</h3>
+                                <p class="small text-secondary mb-0">This poll does not have any answer choices yet.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Poll Information Footer -->
+                    <div class="mt-5 pt-4 border-top border-1">
+                        <div class="row g-3 text-center small">
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1"><i class="bi bi-hand-thumbs-up me-1"></i>Total Votes</p>
+                                <p class="fw-700 h6 mb-0" style="color: #1e3a8a;">{{ question.total_votes }}</p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1"><i class="bi bi-options me-1"></i>Choices</p>
+                                <p class="fw-700 h6 mb-0">{{ question.choices.count }}</p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1"><i class="bi bi-toggle-on me-1"></i>Status</p>
+                                <p class="fw-700 h6 mb-0">
+                                    {% if question.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Closed</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <p class="text-secondary mb-1"><i class="bi bi-calendar-event me-1"></i>Published</p>
+                                <p class="fw-700 h6 mb-0 small">{{ question.pub_date|date:"M d" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <a href="{% url 'app:detail' question.id %}" class="btn btn-sm btn-brand px-4">
+                        <i class="bi bi-check-circle me-2"></i>Cast Your Vote
+                    </a>
+                    <a href="{% url 'app:index' %}" class="btn btn-sm btn-outline-dark px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Polls
+                    </a>
                 </div>
             </div>
         </div>
